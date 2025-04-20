@@ -699,6 +699,9 @@ function executeCommand(cmd, args) {
         return true;
       }
 
+      log(`You cannot use ${item}.`);
+      return false;
+
     case "reset":
       terminalLocked = true;
       localStorage.clear();
