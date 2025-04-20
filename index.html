@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rogueblox Riddle 3</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: black;
+      color: #00ff9f;
+      font-family: 'Share Tech Mono', monospace;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #terminal {
+      display: none;
+      padding: 1rem;
+      height: 80vh;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      background-color: black;
+      color: #00ff9f;
+      font-family: 'Share Tech Mono', monospace;
+      box-sizing: border-box;
+      z-index: 1;
+    }
+
+    #inputArea {
+      opacity: 0;
+      display: none;
+      padding: 1rem;
+      border-top: 1px solid #00ff9f;
+      background-color: black;
+      z-index: 1;
+    }
+
+    input[type="text"] {
+      background: black;
+      border: none;
+      outline: none;
+      color: #00ff9f;
+      font-size: 1rem;
+      width: 100%;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    #hud {
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: rgba(0,0,0,0.6);
+      color: #00ff9f;
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      text-align: right;
+      z-index: 2;
+    }
+
+    .bar {
+      height: 10px;
+      margin-top: 2px;
+      background: red;
+      transition: width 0.3s ease;
+    }
+
+    .tox { background: #126603; }
+    .temp { background: #00f0ff; }
+    .hp { background: #00ff00; }
+
+    #livesDisplay {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      height: auto;
+    }
+
+    .heart {
+      width: 28px;
+      height: 24px;
+      background-image: url('media/images/heart.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      display: inline-block;
+    }
+
+    .heart.empty {
+      filter: grayscale(100%);
+      opacity: 0.5;
+    }
+
+    #clockContainer {
+      opacity: 0;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #00ff9f;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.5rem;
+      text-align: center;
+      border: 2px solid #00ff9f;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+    }
+
+    #clock {
+      font-size: 1.5rem;
+    }
+
+    #speedTimeButton {
+      margin-left: 10px;
+      padding: 5px 10px;
+      font-size: 1rem;
+      background-color: #00ff9f;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #speedTimeButton:hover {
+      background-color: #00cc7a;
+    }
+
+    #inventory {
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #00ff9f;
+      padding: 5px;
+      border-radius: 5px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      border: 1px solid #00ff9f;
+      text-align: left;
+      box-sizing: border-box;
+      z-index: 2;
+    }
+
+    #boot-splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: #00ff9f;
+      font-family: 'Share Tech Mono', monospace;
+      text-align: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    #terminal::-webkit-scrollbar,
+    #inventory::-webkit-scrollbar,
+    #boot-text::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    #terminal::-webkit-scrollbar-track,
+    #inventory::-webkit-scrollbar-track,
+    #boot-text::-webkit-scrollbar-track {
+      background: #1e1e1e;
+      border-radius: 5px;
+    }
+
+    #terminal::-webkit-scrollbar-thumb,
+    #inventory::-webkit-scrollbar-thumb,
+    #boot-text::-webkit-scrollbar-thumb {
+      background: #3c3c3c;
+      border-radius: 5px;
+      border: 2px solid #1e1e1e;
+    }
+
+    #terminal::-webkit-scrollbar-thumb:hover,
+    #inventory::-webkit-scrollbar-thumb:hover,
+    #boot-text::-webkit-scrollbar-thumb:hover {
+      background: #5a5a5a;
+    }
+
+    #terminal::-webkit-scrollbar-corner,
+    #inventory::-webkit-scrollbar-corner,
+    #boot-text::-webkit-scrollbar-corner {
+      background: #1e1e1e;
+    }
+
+    #welcome-message {
+      font-size: 2rem;
+      opacity: 0;
+      color: #00ff9f;
+      text-shadow: 0 0 10px #00ff9f, 0 0 20px #00ff9f;
+      margin-top: 20px;
+      animation: glowPulse 2s infinite;
+    }
+
+    #prowler-logo {
+      width: 200px;
+      height: auto;
+      filter: brightness(1.5);
+      margin-bottom: 1rem;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    #prowler-title {
+      font-size: 2rem;
+      text-shadow: 0 0 5px #00ff9f, 0 0 10px #00ff9f;
+      margin-bottom: 1rem;
+      animation: glowPulse 2s infinite;
+    }
+
+    #boot-text {
+      width: 80%;
+      height: 40%;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 1rem;
+      line-height: 1.5;
+      text-shadow: 0 0 5px #00ff9f;
+      margin-bottom: 1rem;
+    }
+
+    #cursor {
+      display: inline-block;
+      animation: blink 1s steps(1) infinite;
+    }
+
+    #progress-bar-container {
+      width: 80%;
+      height: 10px;
+      background: #333;
+      border: 1px solid #00ff9f;
+      margin-top: 20px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #00ff9f, #004d3f);
+      transition: width 0.5s ease;
+    }
+
+    #boot-splash.fade-out {
+      animation: fadeOut 1.5s forwards;
+    }
+
+    #terminal.fade-in {
+      animation: fadeIn 1.5s forwards;
+    }
+
+    #hud.fade-in,
+    #clockContainer.fade-in,
+    #inputArea.fade-in,
+    #welcome-message.fade-in,
+    #osric-denied.fade-in,
+    #osric-os.fade-in {
+      animation: fadeIn 1.5s forwards;
+    }
+
+    #bios-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #000000, #0a0a0a, #1a1a1a);
+      color: #00ff9f;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 1s ease-in-out;
+      box-shadow: 0 0 20px #00ff9f;
+      padding: 20px;
+      z-index: 9999;
+    }
+
+    #bios-menu h1 {
+      font-size: 2.5rem;
+      text-shadow: 0 0 10px #00ff9f, 0 0 20px #00ff9f;
+      margin-bottom: 20px;
+      animation: glowPulse 2s infinite;
+      text-align: center;
+    }
+
+    #bios-menu p {
+      font-size: 1rem;
+      color: #00ff9f;
+      margin-bottom: 20px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00ff9f;
+      font-style: italic;
+    }
+
+    #bios-options {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 60%;
+      max-width: 400px;
+    }
+
+    .bios-option {
+      padding: 10px 20px;
+      border: 2px solid #00ff9f;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      background: rgba(0, 0, 0, 0.8);
+      color: #00ff9f;
+    }
+
+    .bios-option:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00ff9f;
+    }
+
+    .bios-option.selected {
+      background: linear-gradient(90deg, #00ff9f, #004d3f);
+      color: black;
+      font-weight: bold;
+      box-shadow: 0 0 20px #00ff9f, 0 0 40px #00ff9f;
+    }
+
+    .bios-option.highlighted {
+      background: linear-gradient(90deg, #2de865, #00290d);
+      color: black;
+      font-weight: bold;
+      box-shadow: 0 0 20px #2de865, 0 0 40px #00290d;
+    }
+
+    #no-os-message {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, #000000, #1a1a1a, #2a2a2a);
+      color: #ff4d4d;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #no-os-message h1 {
+      font-size: 2.5rem;
+      text-shadow: 0 0 10px #ff4d4d, 0 0 20px #ff4d4d;
+      margin-bottom: 20px;
+      animation: glowPulseRed 2s infinite;
+    }
+
+    #no-os-message p {
+      font-size: 1.2rem;
+      color: #ff9999;
+      margin-bottom: 20px;
+    }
+
+    .error-details {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #ff4d4d;
+      margin-bottom: 20px;
+    }
+
+    .error-details p {
+      margin: 5px 0;
+      font-size: 1rem;
+    }
+
+    .error-code {
+      color: #ff6666;
+      font-weight: bold;
+    }
+
+    .error-reason {
+      color: #ff9999;
+      font-style: italic;
+    }
+
+    #no-os-message footer {
+      font-size: 1rem;
+      color: #ff6666;
+      margin-top: 20px;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    #osric-denied {
+      display: none;
+      opacity: 0;
+    }
+
+    .osric-os {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at center, #000000 0%, #050505 100%);
+      color: #00ffcc;
+      font-family: 'Share Tech Mono', monospace;
+      padding: 30px;
+    }
+
+    .osric-login {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 2px solid #00ff9f;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.85);
+      box-shadow: 0 0 25px #00ff9f;
+      padding: 20px;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .osric-header {
+      font-size: 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid #00ff9f;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      color: #00ff9f;
+    }
+
+    .osric-body {
+      display: flex;
+      gap: 40px;
+      justify-content: space-between;
+    }
+
+    .osric-profile {
+      flex: 1;
+      text-align: center;
+    }
+
+    .osric-profile img {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      border: 2px solid #00ff9f;
+      box-shadow: 0 0 20px #00ff9f;
+    }
+
+    .auth-row {
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .auth-row input {
+      background: black;
+      color: #00ffcc;
+      border: 2px solid #00ff9f;
+      padding: 8px;
+      border-radius: 5px;
+      width: 200px;
+    }
+
+    .auth-row button,
+    .hint-toggle,
+    .prowlercryptor-side button {
+      background: #00ff9f;
+      color: black;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .hint-toggle {
+      margin-top: 12px;
+    }
+
+    .hint-toggle:hover,
+    .auth-row button:hover {
+      background: #00cc88;
+    }
+
+    .osric-hint {
+      margin-top: 15px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px;
+      border-left: 3px solid #00ff9f;
+      text-align: left;
+      font-size: 0.85rem;
+      color: #00ffcc;
+    }
+
+    .prowlercryptor-side {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #111;
+      border: 2px solid #00ff9f;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px #00ff9f;
+      width: 300px;
+    }
+
+    .prowlercryptor-side h3 {
+      margin-top: 0;
+      text-align: center;
+      color: #00ffcc;
+    }
+
+    .prowlercryptor-side input {
+      width: 100%;
+      padding: 8px;
+      background: black;
+      color: #00ffcc;
+      border: 2px solid #00ff9f;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .crypt-output {
+      font-size: 0.9rem;
+      color: #00ccff;
+      word-wrap: break-word;
+    }
+
+    #victory-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #ff9f00, #ff00ff, #00ffcc);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-family: 'Share Tech Mono', monospace;
+      text-align: center;
+      z-index: 9999;
+      opacity: 0;
+      animation: fadeIn 2s forwards;
+    }
+
+    #victory-screen h1 {
+      font-size: 3rem;
+      text-shadow: 0 0 10px #ffffff, 0 0 20px #ff00ff;
+      margin-bottom: 20px;
+    }
+
+    #victory-screen p {
+      font-size: 1.5rem;
+      margin-bottom: 40px;
+      text-shadow: 0 0 5px #ffffff, 0 0 10px #00ffcc;
+    }
+
+    .flying-images {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .flying-images {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .flying-image {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    #osric-os.fade-out {
+      animation: fadeOut 1.5s forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+
+    @keyframes glowPulse {
+      0%, 100% {
+        text-shadow: 0 0 10px #00ff9f, 0 0 20px #00ff9f;
+      }
+      50% {
+        text-shadow: 0 0 20px #00ff9f, 0 0 40px #00ff9f;
+      }
+    }
+
+    @keyframes glowPulseRed {
+      0%, 100% {
+        text-shadow: 0 0 10px #ff4d4d, 0 0 20px #ff4d4d;
+      }
+      50% {
+        text-shadow: 0 0 20px #ff4d4d, 0 0 40px #ff4d4d;
+      }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    @keyframes flickerAnim {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      40% { opacity: 0.4; }
+      60% { opacity: 1; }
+      80% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div id="hpBarText">Health</div>
+    <div class="bar hp" id="hpBar" style="width:100%"></div>
+    <div id="toxiBarText">Toxicity</div>
+    <div class="bar tox" id="toxBar" style="width:0%"></div>
+    <div id="tempBarText">Temperature</div>
+    <div class="bar temp" id="tempBar" style="width:50%"></div>
+    <div id="livesDisplay"></div>
+    <div id="inventory">Inventory: None</div>
+  </div>
+  <div id="clockContainer">
+    <span id="clock" class="clock">07:00 AM</span>
+    <button id="speedTimeButton" style="display: none; margin-left: 10px;">x1</button>
+  </div>
+  <div id="terminal"></div>
+  <div id="inputArea">
+    <input type="text" id="terminalInput" autofocus>
+  </div>
+  <div id="boot-splash" style="display: none;">
+    <img src="media/images/prowler.png" alt="Prowler Logo" id="prowler-logo">
+    <h1 id="prowler-title">Prowler OS</h1>
+    <pre id="boot-text"></pre>
+    <div id="cursor">_</div>
+    <div id="progress-bar-container">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="welcome-message" style="display: none;">Welcome to Prowler OS</div>
+  </div>
+  <div id="bios-menu" style="display: none;">
+    <h1>BIOS Menu</h1>
+    <p>
+      Use the <strong>Arrow Keys</strong> to navigate and press <strong>Enter</strong> to select.
+    </p>
+    <div id="bios-options"></div>
+    <footer style="margin-top: 30px; font-size: 0.9rem; color: #007f5f;">
+      © 2025 Rogueblox Systems
+    </footer>
+  </div>
+  <div id="no-os-message" style="display: none;">
+    <h1>No Operating System Found</h1>
+    <p>
+      The system could not detect a valid operating system. Please return to the BIOS menu and select a valid OS.
+    </p>
+    <div class="error-details">
+      <p>Error Code: <span class="error-code">0x0000001</span></p>
+      <p>Reason: <span class="error-reason">No bootable media detected</span></p>
+    </div>
+    <footer>
+      <p>Press any key to return to the BIOS menu.</p>
+    </footer>
+  </div>
+  <div id="osric-denied" style="display: none; text-align: center; padding: 20px; color: #ff4d4d; font-family: 'Share Tech Mono', monospace;">
+    <h1>OSric has denied access...</h1>
+    <p style="margin-top: 10px; font-size: 1.2rem;">
+      Access to OSric is restricted. You must meet the following requirements:
+    </p>
+    <ul style="list-style: none; padding: 0; margin-top: 10px; font-size: 1rem; color: #ffffff;">
+      <li>- A functional <strong>watch</strong></li>
+      <li>- A complete <strong>ribcage</strong></li>
+      <li>- Be a <strong>coyote</strong></li>
+    </ul>
+    <p style="margin-top: 20px; font-size: 1rem; color: #aaaaaa;">
+      Press any key to return to the BIOS menu.
+    </p>
+  </div>
+  <div id="osric-os" class="osric-os" style="display: none;">
+    <div class="osric-login">
+      <div class="osric-header">OSric - Secure Access Portal</div>
+      <div class="osric-profile">
+        <img src="media/images/osrichimself.png" alt="OSric Profile Picture">
+        <h2>Osric - The cool kingslayer</h2>
+        <div class="auth-row">
+          <input type="password" id="osricPassword" placeholder="Enter password...">
+          <button onclick="submitOsricPassword()">Submit</button>
+        </div>
+        <button onclick="toggleOsricHint()" class="hint-toggle">Hint</button>
+        <p id="osric-hint" class="osric-hint" style="display: none;">
+          Take the first letter of each orb and the last letter of each rib.<br>
+          Then the opposite: the last letter of each orb and the first of each rib.<br>
+          Alternate between them in order — one from orb, one from rib.<br>
+          When all are stitched together, let the prowler encrypt them.
+        </p>
+      </div>
+    </div>
+    <div class="prowlercryptor-side">
+      <h3>The Prowlercryptor</h3>
+      <input type="text" id="cryptInput" placeholder="Text to encrypt">
+      <button onclick="runEncrypt()">Encrypt</button>
+      <p id="cryptOutput">Encrypted result will appear here.</p>
+    </div>
+  </div>
+  <script src="js/init.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/gameState.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/spawn.js"></script>
+  <script src="js/commands.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/time.js"></script>
+  <script src="js/main.js"></script> 
+</body>
+</html>
