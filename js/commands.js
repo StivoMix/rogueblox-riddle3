@@ -191,9 +191,14 @@ function executeCommand(cmd, args) {
             updateHUD();
           } else {
             const items = spawnedItems[area] || [];
+            const ingredients = ["mushroom", "crystal", "lava flower", "winterleaf", "solar bloom"];
             if (items.length > 0) {
               items.forEach(item => {
-                if (!player.inventory.includes(item.name)) {
+                if (ingredients.includes(item.name)) {
+                  player.inventory.push(item.name);
+                  updateInventoryDisplay();
+                  log(`You found ${item.name} in the graveyard.`);
+                } else if (!player.inventory.includes(item.name)) {
                   player.inventory.push(item.name);
                   updateInventoryDisplay();
                   log(`You found ${item.name} in the graveyard.`);
@@ -265,9 +270,14 @@ function executeCommand(cmd, args) {
           player.temperature += tempShift;
           player.temperature = Math.max(0, Math.min(100, player.temperature));
           const items = spawnedItems[area] || [];
+          const ingredients = ["mushroom", "crystal", "lava flower", "winterleaf", "solar bloom"];
           if (items.length > 0) {
             items.forEach(item => {
-              if (!player.inventory.includes(item.name)) {
+              if (ingredients.includes(item.name)) {
+                player.inventory.push(item.name);
+                updateInventoryDisplay();
+                log(`You found ${item.name} in ${area}${parent ? ` in ${parent}` : ""}.`);
+              } else if (!player.inventory.includes(item.name)) {
                 player.inventory.push(item.name);
                 updateInventoryDisplay();
                 log(`You found ${item.name} in ${area}${parent ? ` in ${parent}` : ""}.`);
@@ -305,9 +315,14 @@ function executeCommand(cmd, args) {
       setTimeout(() => {
         soundScan.pause();
         const items = spawnedItems[area] || [];
+        const ingredients = ["mushroom", "crystal", "lava flower", "winterleaf", "solar bloom"];
         if (items.length > 0) {
           items.forEach(item => {
-            if (!player.inventory.includes(item.name)) {
+            if (ingredients.includes(item.name)) {
+              player.inventory.push(item.name);
+              updateInventoryDisplay();
+              log(`You found ${item.name} in ${area}${parent ? ` in ${parent}` : ""}.`);
+            } else if (!player.inventory.includes(item.name)) {
               player.inventory.push(item.name);
               updateInventoryDisplay();
               log(`You found ${item.name} in ${area}${parent ? ` in ${parent}` : ""}.`);
